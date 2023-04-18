@@ -1,0 +1,29 @@
+clone:
+  depth: full
+pipelines:
+  custom:
+    lighthouse-checks:
+      - step:
+          name: Install dependencies
+          image: node:latest
+          script:
+            - wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key add -
+            - echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" >> /etc/apt/sources.list.d/google-chrome.list
+            - apt-get update
+            - apt-get install google-chrome-stable -y
+            - apt-get update && apt-get install -yq libgconf-2-4
+            - npm install -g @lhci/cli
+            - npm install -g puppeteer
+            - lhci healthcheck
+            - lhci autorun
+    cypress-smoke:
+      - step:
+          image: cypress/included:9.5.3
+          script:
+            - npm update --legacy-peer-deps
+            - npm install --legacy-peer-deps
+            - npx cypress run --record --key 4bf755d5-441e-4ea9-8091-f1ca77346fac --browser chrome --spec "cypress/integration/Tests/StoryCard.js"
+          artifacts:
+            # store any generates images and videos as artifacts
+            - cypress/screenshots/**
+            - cypress/videos/**
